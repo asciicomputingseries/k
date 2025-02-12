@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fixture Score Progression</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .fixture {
+            margin-bottom: 20px;
+        }
+
+        .fixture-name {
+            font-weight: bold;
+        }
+
+        .score-container {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .score-input {
+            width: 50px;
+            margin: 0 10px;
+            padding: 5px;
+            text-align: center;
+        }
+
+        .progress-bar {
+            width: 100%;
+            background-color: #ddd;
+            margin-top: 10px;
+        }
+
+        .progress {
+            height: 10px;
+            background-color: #4caf50;
+        }
+
+        .stats {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #333;
+        }
+    </style>
+
+</head>
+<body>
+
+<h1 style="text-align: center;">KWASARE CIRCUIT SPORTS FESTIVAL 2025</h1>
+<h2 style="text-align: center;">VENUE: ARHINFULKROM</h2>
+<style>.score-progression { color: blue; }</style><h4 class="score-progression">SCORE PROGRESSION SHEET</h4>
+    <div id="fixtures-container"></div>
+
+    <script>
+        const fixtures = [
+            "ARHINFULKROM DA JHS VS GYAU DA PRIM (U 15 GIRLS)",
+            "AKWABENGKROM D/A vs KWASARE DA JHS (U15 GIRLS)",
+            "KWASARE D/A Prim vs ATTABATOR DA Prim (U 13 Boys)",
+            "SUMA D/A PRIM vs ARHINFULKROM DA PRIM (U-13 BOYS)",
+            "ARHINFULKROM DA vs KWASARE DA JHS (U 15 BOYS)",
+            "AKWABENG DA JHS vs ATUA DA JHS (U-15 BOYS)",
+            "ATUA DA JHS VS GYAU DA PRIM (U-15 GIRLS)",
+            "AKWABENG D/A JHS Vs SUMA D/A JHS (U-15 GIRLS)",
+            "AKWABENG D/A PRIM VS ATTABATOR DA PRIM (U-13 BOYS)",
+            "GYAU DA PRIM vs ATUA DA PRIM (U-13 BOYS)",
+            "SUMA DA JHS vs KWASARE DA JHS (U-15 BOYS)",
+            "ARHINFULKROM DA JHS vs AKWABENG DA JHS (U-15 BOYS)",
+            "ATUA DA JHS vs ARHINFULKROM DA JHS (U-15 GIRLS)",
+            "SUMA DA JHS vs KWASARE DA JHS (U-15 GIRLS)",
+            "AKWABENG DA PRIM vs KWASARE DA PRIM (U-13 BOYS)",
+            "ARHINFULKROM DA PRIM vs GYAU DA PRIM (U-13 BOYS)",
+            "SUMA DA PRIM vs ATUA DA PRIM (U-13 BOYS)",
+            "ATUA DA JHS vs SUMA DA JHS (U-15 BOYS)",
+            "KWASARE DA JHS vs AKWABENG DA JHS (U-15 BOYS)",
+            "ATUA DA JHS vs ARHINFULKROM DA JHS (U-15 BOYS)",
+            "ARHINFULKROM DA PRIM vs ATUA DA PRIM (U-13 BOYS)",
+            "GYAU DA PRIM vs SUMA DA PRIM (U-13 BOYS)",
+            "SUMA DA JHS VS AKWABENG DA JHS (U-15 BOYS)",
+            "GROUP A1 vs GROUP B2 (U-15 GIRLS)",
+            "GROUP B1 vs GROUP A2 (U-15 GIRLS)",
+            "SUMA DA JHS vs ARHINFULKROM JHS (U-15 BOYS)",
+            "GROUP A1 vs GROUP B2 (U-13 BOYS)",
+            "GROUP B1 vs GROUP A2 (U-13 BOYS)",
+            "KWASARE DA JHS vs ATUA DA JHS (U-15 BOYS)",
+            "SEMI FINAL 1 LOSER vs SEMI FINAL 2 LOSER (U-13 BOYS)",
+            "SEMI FINAL 1 LOSER vs SEMI FINAL 2 LOSER (U-15 GIRLS)",
+            "SEMI FINAL 1 WINNER vs SEMI FINAL 2 WINNER (U-15 GIRLS)",
+            "SEMI FINAL 1 WINNER vs SEMI FINAL 2 WINNER (U-13 BOYS)",
+            "TEACHERS SELECT SIDE vs COMMUNITY SELECT SIDE"
+        ];
+
+        function saveScores() {
+            const scores = [];
+            document.querySelectorAll('.fixture').forEach((fixture) => {
+                const teamAScore = fixture.querySelector('input[data-team="A"]').value || "0";
+                const teamBScore = fixture.querySelector('input[data-team="B"]').value || "0";
+                scores.push({ teamA: teamAScore, teamB: teamBScore });
+            });
+            localStorage.setItem('fixtureScores', JSON.stringify(scores));
+        }
+
+        function loadScores() {
+            const savedScores = JSON.parse(localStorage.getItem('fixtureScores')) || [];
+            document.querySelectorAll('.fixture').forEach((fixture, index) => {
+                const teamAScoreInput = fixture.querySelector('input[data-team="A"]');
+                const teamBScoreInput = fixture.querySelector('input[data-team="B"]');
+
+                teamAScoreInput.value = savedScores[index]?.teamA || "0";
+                teamBScoreInput.value = savedScores[index]?.teamB || "0";
+
+                updateProgressBar({ target: teamAScoreInput });
+            });
+        }
+
+        function updateProgressBar(event) {
+            const parent = event.target.closest('.fixture');
+            const teamAScoreInput = parent.querySelector('input[data-team="A"]');
+            const teamBScoreInput = parent.querySelector('input[data-team="B"]');
+            const progressBar = parent.querySelector('.progress');
+            const statsContainer = parent.querySelector('.stats');
+            const pointsElement = statsContainer.querySelector('.points');
+            const goalsElement = statsContainer.querySelector('.goals');
+            const goalDifferenceElement = statsContainer.querySelector('.goal-difference');
+
+            const scoreA = parseInt(teamAScoreInput.value) || 0;
+            const scoreB = parseInt(teamBScoreInput.value) || 0;
+
+            const totalScore = scoreA + scoreB;
+            const progress = totalScore > 0 ? (scoreA / totalScore) * 100 : 0;
+
+            progressBar.style.width = `${progress}%`;
+
+            let pointsA = 0, pointsB = 0;
+            if (scoreA > scoreB) pointsA = 3;
+            else if (scoreA < scoreB) pointsB = 3;
+            else if (scoreA !== 0 || scoreB !== 0) pointsA = pointsB = 1;
+
+            pointsElement.innerText = pointsA + ' : ' + pointsB;
+            goalsElement.innerText = scoreA + ' : ' + scoreB;
+            goalDifferenceElement.innerText = (scoreA - scoreB) + ' : ' + (scoreB - scoreA);
+
+            saveScores();
+        }
+
+        function createFixtures() {
+            const container = document.getElementById('fixtures-container');
+            fixtures.forEach(match => {
+                const fixtureElement = document.createElement('div');
+                fixtureElement.classList.add('fixture');
+
+                fixtureElement.innerHTML = `
+                    <div class="fixture-name">${match}</div>
+                    <div class="score-container">
+                        <input class="score-input" type="number" data-team="A" value="0">
+                        <input class="score-input" type="number" data-team="B" value="0">
+                    </div>
+                    <div class="progress-bar"><div class="progress"></div></div>
+                    <div class="stats">
+                        <div>Points: <span class="points">0:0</span></div>
+                        <div>Goals: <span class="goals">0:0</span></div>
+                        <div>Goal Difference: <span class="goal-difference">0:0</span></div>
+                    </div>
+                `;
+
+                container.appendChild(fixtureElement);
+                fixtureElement.querySelectorAll('.score-input').forEach(input => input.addEventListener('input', updateProgressBar));
+            });
+
+            loadScores();
+        }
+
+        createFixtures();
+    </script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Football Standings</title>
+    <style>
+        table { border-collapse: collapse; width: 50%; }
+        th, td { border: 1px solid black; padding: 10px; text-align: center; }
+        input { width: 50px; }
+    </style>
+    <script>
+        function updateTable() {
+            let teams = document.querySelectorAll("tbody tr");
+            let standings = [];
+            
+            teams.forEach((row, index) => {
+                let teamName = row.querySelector(".team").textContent;
+                let wins = parseInt(row.querySelector(".wins").value) || 0;
+                let penaltyWins = parseInt(row.querySelector(".penaltyWins").value) || 0;
+                let PenaltyLoses = parseInt(row.querySelector(".PenaltyLoses").value) || 0;
+                let goalsScored = parseInt(row.querySelector(".goalsScored").value) || 0;
+                let goalsConceded = parseInt(row.querySelector(".goalsConceded").value) || 0;
+                
+                let points = (wins * 3) + (penaltyWins * 2) + (PenaltyLoses * 1);
+                let goalDifference = goalsScored - goalsConceded;
+                
+                row.querySelector(".points").textContent = points;
+                row.querySelector(".goalDifference").textContent = goalDifference;
+                
+                standings.push({ teamName, wins, penaltyWins, PenaltyLoses, goalsScored, goalsConceded, points, goalDifference });
+            });
+            
+            localStorage.setItem("footballStandings", JSON.stringify(standings));
+        }
+        
+        function loadTable() {
+            let storedData = localStorage.getItem("footballStandings");
+            if (storedData) {
+                let standings = JSON.parse(storedData);
+                let teams = document.querySelectorAll("tbody tr");
+                
+                teams.forEach((row, index) => {
+                    if (standings[index]) {
+                        row.querySelector(".wins").value = standings[index].wins;
+                        row.querySelector(".penaltyWins").value = standings[index].penaltyWins;
+                        row.querySelector(".PenaltyLoses").value = standings[index].PenaltyLoses;
+                        row.querySelector(".goalsScored").value = standings[index].goalsScored;
+                        row.querySelector(".goalsConceded").value = standings[index].goalsConceded;
+                        row.querySelector(".points").textContent = standings[index].points;
+                        row.querySelector(".goalDifference").textContent = standings[index].goalDifference;
+                    }
+                });
+            }
+        }
+        
+        window.onload = loadTable;
+    </script>
+</head>
+<body>
+   
+            </tr>
+        </thead>
+        <tbody>
+            
+            
+            
+        </tbody>
+    </table>
+
+
+   <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football Standings</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        table { border-collapse: collapse; width: 80%; margin: auto; }
+        th, td { border: 1px solid black; padding: 10px; text-align: center; }
+        input { width: 50px; }
+        button { margin-top: 10px; padding: 10px; cursor: pointer; display: block; margin: auto; }
+    </style>
+</head>
+<body>
+    
+    <h2 style="text-align: center;">Football League Table</h2>
+    <table id="standingsTable">
+        <thead>
+            <tr>
+                <th>Team</th>
+                <th>Wins</th>
+                <th>Penalty Wins</th>
+                <th>Penalty Loses</th>
+                <th>Goals Scored</th>
+                <th>Goals Conceded</th>
+                <th>Points</th>
+                <th>Goal Difference</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="team">ARHINFULKROM DA JHS GIRLS</td>
+                <td><input type="number" class="wins" oninput="updateTable()"></td>
+                <td><input type="number" class="penaltyWins" oninput="updateTable()"></td>
+                <td><input type="number" class="PenaltyLoses" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsScored" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsConceded" oninput="updateTable()"></td>
+                <td class="points">0</td>
+                <td class="goalDifference">0</td>
+            </tr>
+            <tr>
+                <td class="team"> GYAU DA PRIM (U 15 GIRLS)</td>
+                <td><input type="number" class="wins" oninput="updateTable()"></td>
+                <td><input type="number" class="penaltyWins" oninput="updateTable()"></td>
+                <td><input type="number" class="PenaltyLoses" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsScored" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsConceded" oninput="updateTable()"></td>
+                <td class="points">0</td>
+                <td class="goalDifference">0</td>
+            </tr>
+            <tr>
+                <td class="team">AKWABENGKROM D/A GIRLS</td>
+                <td><input type="number" class="wins" oninput="updateTable()"></td>
+                <td><input type="number" class="penaltyWins" oninput="updateTable()"></td>
+                <td><input type="number" class="PenaltyLoses" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsScored" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsConceded" oninput="updateTable()"></td>
+                <td class="points">0</td>
+                <td class="goalDifference">0</td>
+            </tr>
+            <tr>
+                <td class="team"> KWASARE DA JHS U15 GIRLS</td>
+                <td><input type="number" class="wins" oninput="updateTable()"></td>
+                <td><input type="number" class="penaltyWins" oninput="updateTable()"></td>
+                <td><input type="number" class="PenaltyLoses" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsScored" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsConceded" oninput="updateTable()"></td>
+                <td class="points">0</td>
+                <td class="goalDifference">0</td>
+            </tr>
+            <tr>
+                <td class="team">KWASARE D/A Prim U13 BOYS</td>
+                <td><input type="number" class="wins" oninput="updateTable()"></td>
+                <td><input type="number" class="penaltyWins" oninput="updateTable()"></td>
+                <td><input type="number" class="PenaltyLoses" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsScored" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsConceded" oninput="updateTable()"></td>
+                <td class="points">0</td>
+                <td class="goalDifference">0</td>
+            </tr>
+            <tr>
+                <td class="team"> ATTABATOR DA Prim U 13 Boys</td>
+                <td><input type="number" class="wins" oninput="updateTable()"></td>
+                <td><input type="number" class="penaltyWins" oninput="updateTable()"></td>
+                <td><input type="number" class="PenaltyLoses" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsScored" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsConceded" oninput="updateTable()"></td>
+                <td class="points">0</td>
+                <td class="goalDifference">0</td>
+            </tr>
+            <tr>
+                <td class="team">SUMA D/A PRIM U13</td>
+                <td><input type="number" class="wins" oninput="updateTable()"></td>
+                <td><input type="number" class="penaltyWins" oninput="updateTable()"></td>
+                <td><input type="number" class="PenaltyLoses" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsScored" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsConceded" oninput="updateTable()"></td>
+                <td class="points">0</td>
+                <td class="goalDifference">0</td>
+            </tr>
+            <tr>
+                <td class="team"> ARHINFULKROM DA PRIM (U-13 BOYS)</td>
+                <td><input type="number" class="wins" oninput="updateTable()"></td>
+                <td><input type="number" class="penaltyWins" oninput="updateTable()"></td>
+                <td><input type="number" class="PenaltyLoses" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsScored" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsConceded" oninput="updateTable()"></td>
+                <td class="points">0</td>
+                <td class="goalDifference">0</td>
+            </tr>
+
+
+            <tr>
+                <td class="team">ARHINFULKROM DA U15 BOYS</td>
+                <td><input type="number" class="wins" oninput="updateTable()"></td>
+                <td><input type="number" class="penaltyWins" oninput="updateTable()"></td>
+                <td><input type="number" class="PenaltyLoses" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsScored" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsConceded" oninput="updateTable()"></td>
+                <td class="points">0</td>
+                <td class="goalDifference">0</td>
+            </tr>
+            <tr>
+                <td class="team"> KWASARE DA JHS (U 15 BOYS</td>
+                <td><input type="number" class="wins" oninput="updateTable()"></td>
+                <td><input type="number" class="penaltyWins" oninput="updateTable()"></td>
+                <td><input type="number" class="PenaltyLoses" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsScored" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsConceded" oninput="updateTable()"></td>
+                <td class="points">0</td>
+                <td class="goalDifference">0</td>
+            </tr>
+            <tr>
+                <td class="team">AKWABENG DA JHS U15 BOYS</td>
+                <td><input type="number" class="wins" oninput="updateTable()"></td>
+                <td><input type="number" class="penaltyWins" oninput="updateTable()"></td>
+                <td><input type="number" class="PenaltyLoses" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsScored" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsConceded" oninput="updateTable()"></td>
+                <td class="points">0</td>
+                <td class="goalDifference">0</td>
+            </tr>
+            <tr>
+                <td class="team"> ATUA DA JHS (U-15 BOYS)</td>
+                <td><input type="number" class="wins" oninput="updateTable()"></td>
+                <td><input type="number" class="penaltyWins" oninput="updateTable()"></td>
+                <td><input type="number" class="PenaltyLoses" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsScored" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsConceded" oninput="updateTable()"></td>
+                <td class="points">0</td>
+                <td class="goalDifference">0</td>
+            </tr>
+            <tr>
+                <td class="team">ATUA DA JHS U15 GIRLS</td>
+                <td><input type="number" class="wins" oninput="updateTable()"></td>
+                <td><input type="number" class="penaltyWins" oninput="updateTable()"></td>
+                <td><input type="number" class="PenaltyLoses" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsScored" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsConceded" oninput="updateTable()"></td>
+                <td class="points">0</td>
+                <td class="goalDifference">0</td>
+            </tr>
+            <tr>
+                <td class="team">AKWABENG DA PRIM U13 BOYS</td>
+                <td><input type="number" class="wins" oninput="updateTable()"></td>
+                <td><input type="number" class="penaltyWins" oninput="updateTable()"></td>
+                <td><input type="number" class="PenaltyLoses" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsScored" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsConceded" oninput="updateTable()"></td>
+                <td class="points">0</td>
+                <td class="goalDifference">0</td>
+            </tr>
+            <tr>
+                <td class="team">SUMA DA JHS U15 BOYS</td>
+                <td><input type="number" class="wins" oninput="updateTable()"></td>
+                <td><input type="number" class="penaltyWins" oninput="updateTable()"></td>
+                <td><input type="number" class="PenaltyLoses" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsScored" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsConceded" oninput="updateTable()"></td>
+                <td class="points">0</td>
+                <td class="goalDifference">0</td>
+            </tr>
+            <tr>
+                <td class="team">SUMA D/A JHS (U-15 GIRLS)</td>
+                <td><input type="number" class="wins" oninput="updateTable()"></td>
+                <td><input type="number" class="penaltyWins" oninput="updateTable()"></td>
+                <td><input type="number" class="PenaltyLoses" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsScored" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsConceded" oninput="updateTable()"></td>
+                <td class="points">0</td>
+                <td class="goalDifference">0</td>
+            </tr>
+            <tr>
+                <td class="team">ATUA DA PRIM (U-13 BOYS)</td>
+                <td><input type="number" class="wins" oninput="updateTable()"></td>
+                <td><input type="number" class="penaltyWins" oninput="updateTable()"></td>
+                <td><input type="number" class="PenaltyLoses" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsScored" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsConceded" oninput="updateTable()"></td>
+                <td class="points">0</td>
+                <td class="goalDifference">0</td>
+            </tr>
+            <tr>
+                <td class="team"> GYAU DA PRIM (U-13 BOYS</td>
+                <td><input type="number" class="wins" oninput="updateTable()"></td>
+                <td><input type="number" class="penaltyWins" oninput="updateTable()"></td>
+                <td><input type="number" class="PenaltyLoses" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsScored" oninput="updateTable()"></td>
+                <td><input type="number" class="goalsConceded" oninput="updateTable()"></td>
+                <td class="points">0</td>
+                <td class="goalDifference">0</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <button onclick="downloadPDF()">Download as PDF</button>
+
+    <script>
+        function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            let doc = new jsPDF('l', 'mm', 'a4'); // A4 size
+
+            let element = document.getElementById("standingsTable");
+
+            html2canvas(element).then(canvas => {
+                let imgData = canvas.toDataURL("image/png");
+                let imgWidth = 260; // Adjust width
+                let imgHeight = (canvas.height * imgWidth) / canvas.width; // Keep aspect ratio
+
+                doc.addImage(imgData, 'PNG', 10, 2, imgWidth, imgHeight);
+                doc.save("Football_Standings.pdf");
+            });
+        }
+    </script>
+</body>
+</html>
+
+
+<br>
+<br>
+
+<style>
+    .score-progression { color: blue; }
+</style>
+<h4 class="score-progression" style="text-align: center;">© 2024 Sir. Edward. All Rights Reserved. Contact: 0244888885 / 0200100005</h4>
+
+
+
+
+
+
+
+
+    
